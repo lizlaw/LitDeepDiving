@@ -1,0 +1,90 @@
+---
+title: "Semi-automated rapid evidence mapping"
+author: "Liz Law, Matt Grainger"
+date: "11/9/2020"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# Semi-automated rapid evidence mapping
+Example: mapping the evidence for impacts of managed bees on native bees
+
+
+## Searching the literature
+
+The problem
+
+- Complex search terms (AND, OR, NEAR…TOPICS, TITLES, TYPES… SOURCES, YEARS…)
+- Unknown search terms (familiar with only part of the literature)
+- Getting too much/not enough literature
+
+*add examples here 
+
+## Two solutions
+
+litsearchr :: semi automated search terms
+scimeetr / bibiometrix :: group/characterise the literature
+
+## litsearchr 
+
+- partially automates keyword selection and writing Boolean search strings
+- uses the Rapid Automatic Keyword Extraction algorithm to identify potential keywords from a scoping search 
+- selects important keywords based on their importance in a keyword co-occurrence network
+- after keywords are grouped into concept groups, litsearchr writes Boolean searches
+
+- caveats??
+
+## litsearchr example
+
+* add example here
+
+## scimeetr 
+
+Designed to "help explore the literature" by
+
+- characterising literature communities by keywords (title, abstract, keywords, keywords+, and cited references)
+- return tags, top keywords, authors, cited literature
+- generate reading lists by ranking, OR bibiography network characteristics
+
+- caveats: only on github, 'beta' version
+
+## scimeetr example
+
+* add example here
+
+## Diving deeper
+
+doi2text
+
+- automates finding of full text 
+- identifies sections
+
+text mining of (primary) literature
+
+- e.g.
+- searching for specific terms within the methods/results text 
+  - species / species types 
+  - landscapes / locations
+  - sampling methods (pan, malaise, netting, etc)
+- searching for data in figures and tables through legends
+  
+- caveat(?) 
+  - needs to be fed in 'lists' 
+  - but this useful for standardisation of the literature
+  - we can potentially automate creation of these lists via text mining
+
+## Slide with R Output
+
+```{r cars, echo = TRUE}
+summary(cars)
+```
+
+## Slide with Plot
+
+```{r pressure}
+plot(pressure)
+```
+
