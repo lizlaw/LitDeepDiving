@@ -71,6 +71,7 @@ Caveats:
 - for example:
      - Year is missing for many interesting early access
      - may need 'stemming' of keywords, for some purposes
+     - may need to identify 'synonyms' and possibly compount terms in data cleaning.
 
 ## scimeetr example
 
@@ -104,6 +105,26 @@ Caveats
 
 * add example here
 
+## summary on litsearchr, scimeetr, bibliometrix
+
+- litsearchr useful, but should be part of a process including
+- scimeetr (Liz' preference) or bibliometrix
+
+BUT
+
+- best practice would be iterative, documented (eg. in R)
+- AND involve further cleaning, processing of data & terms
+
+## Going further
+
+Facilitated title and abstract screening using revtools
+
+- allocates randomly to participants
+- title, blinded to other details (authors etc)
+- in/out/unsure
+
+And/or...
+
 ## Diving deeper
 
 doi2text
@@ -111,16 +132,18 @@ doi2text
 - automates finding of full text 
 - identifies sections
 
-text mining of (primary) literature
+text mining of (primary) literature 
 
-- e.g.
+e.g.
+
 - searching for specific terms within the methods/results text 
   - species / species types 
   - landscapes / locations
   - sampling methods (pan, malaise, netting, etc)
 - searching for data in figures and tables through legends
   
-- caveat(?) 
+caveats(?) 
+
   - needs to be fed in 'lists' 
   - but this useful for standardisation of the literature
   - we can potentially automate creation of these lists via text mining
