@@ -16,6 +16,10 @@ Example: mapping the evidence for impacts of managed bees on native bees
 Liz is learning how to do these slides with R-markdown in a safe and friendly environment.
 Sorry for the lack of pretty details etc.
 
+![](https://media.giphy.com/media/UxREcFThpSEqk/giphy.gif)
+
+
+
 ## Searching the literature
 
 Motivating problem(s)
@@ -27,15 +31,20 @@ Motivating problem(s)
 
 Particularly issues with broad/complex issues (like everything conservation)
 
+## General advice for searching
+
+MATT to add 
+
 ## Example
 Aim: summarise evidence for impacts of managed bees on native bees
 
 Many aspects: Foraging, Nesting, Disease/pests/pesticides/introgression, Plant-mediated
 Many covariates: Types of bees, habitats, 'treatments' 
 
-## Two solutions
+## Two solutions (not mutually exclusive)
 
 litsearchr :: semi automated search terms
+
 scimeetr / bibiometrix :: group/characterise the literature
 
 ## litsearchr 
@@ -45,11 +54,99 @@ scimeetr / bibiometrix :: group/characterise the literature
 - selects important keywords based on their importance in a keyword co-occurrence network
 - after keywords are grouped into concept groups, litsearchr writes Boolean searches
 
-- caveats??
 
-## litsearchr example
+## litsearchr example 1
 
-* add example here
+Using the Red-cockaded woodpecker example in {package::litsearchr}
+
+- We use a "scoping search" to get some literature and deduplicate
+
+```{r litsearchr example, echo=FALSE, message=FALSE, warning=FALSE}
+
+library(litsearchr)
+library(synthesisr)
+library(tidyverse)
+
+file_names <- c(
+  system.file("extdata", "scopus.ris", package = "synthesisr"),
+  system.file("extdata", "zoorec.txt", package = "synthesisr"))
+data <- synthesisr::read_refs(file_names)
+
+cleaned_data <- synthesisr::deduplicate(data,
+                                        match_by = "title",
+                                        method = "string_osa",
+                                        rm_punctuation = TRUE,
+                                        to_lower = TRUE)
+```
+
+
+```{r echo=FALSE}
+
+knitr::kable(cleaned_data %>% 
+  select(year, title) %>% 
+  head(3))
+  
+```
+
+## litsearchr example 2
+
+- Then using the "rake" algorithm we find co-occurring keywords from the abstracts
+
+```{r}
+rake_keywords <- litsearchr::extract_terms(cleaned_data$abstract,
+                                           method = "fakerake",
+                                           min_freq = 5,
+                                           stopwords ="English")
+
+knitr::kable(sample_n(as_tibble(rake_keywords)
+         , 5))
+
+```
+
+```{r echo=FALSE}
+naive_dfm <- litsearchr::create_dfm(
+  elements = cleaned_data$abstract,
+  features = rake_keywords)
+naive_graph <- litsearchr::create_network(
+  search_dfm = as.matrix(naive_dfm),
+  min_studies = 1,
+  min_occ = 1)
+spline_cutoff <- litsearchr::find_cutoff(naive_graph,
+                                         method = "cumulative",
+                                         percent = 0.3,
+                                         knot_num = 3)
+reduced_graph <- litsearchr::reduce_graph(naive_graph,
+                                          cutoff_strength = spline_cutoff)
+search_terms <- litsearchr::get_keywords(reduced_graph)
+#Finally, we can group terms together and write a Boolean search:
+ search_groups <- split(search_terms,
+                       factor(
+                         2 - as.numeric(grepl("forest|log", search_terms)),
+                         levels = seq_len(2),
+                         labels = c("forest", "not forest")))
+woodpecker_search <- litsearchr::write_search(search_groups,
+                                              languages = "English",
+                                              stemming = TRUE,
+                                              closure = "left",
+                                              exactphrase = TRUE,
+                                              writesearch = FALSE,
+                                              verbose = TRUE)
+```
+
+## litsearchr example 3
+
+- Then we can reduce these keywords down to a smaller set
+
+```{r keyword graph}
+
+plot(reduced_graph)
+```
+
+## litsearchr example 4
+
+- Then we can output a search string. 
+
+Search terms are outputted automatically: `r paste0(woodpecker_search) `
 
 ## scimeetr 
 
@@ -103,7 +200,7 @@ Caveats
 
 ## bibliometrix example
 
-* add example here
+MATT to Add??
 
 ## summary on litsearchr, scimeetr, bibliometrix
 
@@ -148,15 +245,4 @@ caveats(?)
   - but this useful for standardisation of the literature
   - we can potentially automate creation of these lists via text mining
 
-## Slide with R Output
-
-```{r cars, echo = TRUE}
-summary(cars)
-```
-
-## Slide with Plot
-
-```{r pressure}
-plot(pressure)
-```
 
