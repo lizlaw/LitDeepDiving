@@ -12,16 +12,26 @@ knitr::opts_chunk$set(echo = FALSE)
 # Semi-automated rapid evidence mapping
 Example: mapping the evidence for impacts of managed bees on native bees
 
+## Patience please :)
+Liz is learning how to do these slides with R-markdown in a safe and friendly environment.
+Sorry for the lack of pretty details etc.
 
 ## Searching the literature
 
-The problem
+Motivating problem(s)
 
 - Complex search terms (AND, OR, NEAR…TOPICS, TITLES, TYPES… SOURCES, YEARS…)
 - Unknown search terms (familiar with only part of the literature)
-- Getting too much/not enough literature
+- Getting too much literature (and lots of junk)
+- Getting not enough literature (missing many key papers)
 
-*add examples here 
+Particularly issues with broad/complex issues (like everything conservation)
+
+## Example
+Aim: summarise evidence for impacts of managed bees on native bees
+
+Many aspects: Foraging, Nesting, Disease/pests/pesticides/introgression, Plant-mediated
+Many covariates: Types of bees, habitats, 'treatments' 
 
 ## Two solutions
 
@@ -49,9 +59,48 @@ Designed to "help explore the literature" by
 - return tags, top keywords, authors, cited literature
 - generate reading lists by ranking, OR bibiography network characteristics
 
-- caveats: only on github, 'beta' version
+Clustering based on:
+
+- igraph::cluster_louvain() or igraph::cluster_fast_greedy() (self-stopping)
+- using cited references, keywords, title, abstract (some cleaning using tm)
+
+Caveats: 
+
+- only on github, 'beta' version, ? on further development
+- may need some further 'cleaning' and customising
+- for example:
+     - Year is missing for many interesting early access
+     - may need 'stemming' of keywords, for some purposes
 
 ## scimeetr example
+
+* add example here
+
+## bibliometrix
+
+Similarly to scimeetr
+
+- provides an easy way to characterise the data
+- e.g. plots by year
+
+Differently to scimeetr
+
+- More network plot options (plot co-author, country networks)
+- Fewer integrated grouping options
+- R-cran, more stable (?)
+
+Clustering based on:
+
+- keywords, title, OR abstract (optional 'stemming')
+- Multiple Correspondence Analysis (default), or CA, MDS
+- then k-means clustering on this (k = "auto" or user-supplied)
+
+Caveats
+
+- similarly to scimeetr, data may need pre-cleaning
+- annoying change of column labels from wos import
+
+## bibliometrix example
 
 * add example here
 
