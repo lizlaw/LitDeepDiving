@@ -1,0 +1,9 @@
+slides > slide.title-slide {
+  background-image: url(https://media.giphy.com/media/3o84U1nWRzyqOEOKpa/giphy.gif);
+  background-repeat: no-repeat;
+  background-position: right center;
+}
+
+slides > slide.title-slide hgroup {
+  width: 80%;
+}

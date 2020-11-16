@@ -1,12 +1,16 @@
 ---
 title: "Semi-automated rapid evidence mapping"
+subtitle: "Slides & scripts: https://github.com/lizlaw/LitDeepDiving"
 author: "Liz Law, Matt Grainger"
 date: "11/9/2020"
-output: ioslides_presentation
+output: 
+    ioslides_presentation:
+        widescreen: true
+        css: styles.css
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, cache=TRUE)
 ```
 
 ## Patience please :)
@@ -15,27 +19,23 @@ Sorry for the lack of pretty details etc.
 
 ![](https://media.giphy.com/media/UxREcFThpSEqk/giphy.gif)
 
-## Searching the literature
-
-Motivating problem(s)
-
+## Motivating problem(s) 
 - Complex search terms (AND, OR, NEAR…TOPICS, TITLES, TYPES… SOURCES, YEARS…)
 - Unknown search terms (familiar with only part of the literature)
 - Getting too much literature (and lots of junk)
 - Getting not enough literature (missing many key papers)
 
-Particularly issues with broad/complex issues (like everything conservation)
 
-## General advice for searching
+--- 
 
-MATT to add 
+![](https://media.giphy.com/media/7E8lI6TkLrvvAcPXso/giphy.gif)
 
-[KeyWords Plus](https://support.clarivate.com/ScientificandAcademicResearch/s/article/KeyWords-Plus-generation-creation-and-changes?language=en_US): important words extracted from the _title of references cited_ (WoS only). Included in TOPIC search. 
+Particularly issues with broad/complex/interdisciplinary issues (like everything conservation) this can be quickly overwhelming...
 
 ## Example of the problem
 Aim: summarise evidence for impacts of managed bees on native bees
 
-Broad topic: 
+Broad, complex, interdisciplinary topic: 
 
 - managed bees can be Apis, Bombus, ...
 - native bees can also be many 
@@ -62,30 +62,50 @@ Broad topic:
 
 : Searched Web of Science on 11/16/2020
 
-## Two solutions (not mutually exclusive)
+## Two solutions (not mutually exclusive) {.columns-2}
+Improve/narrow search terms further  
+```{r, out.width=300}
+   knitr::include_graphics('png/OneEyeDeer.png')
+```
 
-1. "improve"/narrow search terms further
-    
-    - caveat: requires you to have a well defined "in-group"
+<p class="forceBreak"></p>
 
-2. characterise the literature first, then select
+Characterise the literature first, then select groups to include  
+```{r, out.width=300}
+   knitr::include_graphics('png/NoEyeDeer.png')
+```
 
-    - based on keywords, abstracts, cited literature
+## Improving/narrowing search terms: {.smaller}
 
-## Improving search terms: 
+More specificity 
 
 - include NEAR, NOT, SAME
-- restrict document types, years, language
 - restrict research areas / journals
+- see e.g.: 
+    - [WoS Advanced search](https://images.webofknowledge.com/WOKRS535R100/help/WOS/hp_advanced_search.html)
+    - [WoS Boolean terms](https://images.webofknowledge.com/images/help/WOS/hs_search_operators.html)
+
+Arbitrary cut-offs
+
+- years, language, document types
 - select top-n by times cited, relevance (Title, Abstract, Keywords, Keywords Plus)
-- see: [advanced search tab](https://images.webofknowledge.com/WOKRS535R100/help/WOS/hp_advanced_search.html)
 
-Emerging approaches:
+Emerging approaches
 
-- semi-automated
+- semi-automated extraction of search terms
 - word groups (N-grams, or word co-occurences in ordered sets)
 
-## Improving search terms: litsearchr 
+## General advice for searching
+
+MATT to add 
+
+[KeyWords Plus](https://support.clarivate.com/ScientificandAcademicResearch/s/article/KeyWords-Plus-generation-creation-and-changes?language=en_US): important words extracted from the _title of references cited_ (WoS only). Included in TOPIC search (along with title and author-supplied keywords). 
+
+
+## Improving search terms: litsearchr  {.columns-2}
+```{r, out.width=450}
+   knitr::include_graphics('https://elizagrames.github.io/litsearchr/styles/litsearchr-hex.png')
+```
 
 - partially automates keyword selection and writing Boolean search strings
 - uses the Rapid Automatic Keyword Extraction algorithm to identify potential keywords from a scoping search 
@@ -266,7 +286,7 @@ Characterise the clusters by keywords, "topic models", "reading lists"
 Options in Scimeetr, revtools, bibliometrix
 
 
-## scimeetr 
+## scimeetr {.smaller .columns-2}
 
 Designed to "help explore the literature" by
 
@@ -274,10 +294,10 @@ Designed to "help explore the literature" by
 - return tags, top keywords, authors, cited literature
 - generate reading lists by ranking, OR bibiography network characteristics
 
-Clustering based on:
+Clustering based on
 
-- igraph::cluster_louvain() or igraph::cluster_fast_greedy() (self-stopping)
-- using cited references, keywords, title, abstract (some cleaning using tm)
+- `igraph::cluster_louvain()` or `igraph::cluster_fast_greedy()` (self-stopping)
+- using cited references, keywords, title, abstract (some cleaning using `tm`)
 
 Caveats: 
 
@@ -288,9 +308,81 @@ Caveats:
      - may need 'stemming' of keywords, for some purposes
      - may need to identify 'synonyms' and possibly compount terms in data cleaning.
 
-## scimeetr example
+## scimeetr example - load data
+Load as tab delimited files
+```{r echo=TRUE, warnings=FALSE, message=FALSE}
 
-* add example here
+# install.packages
+# if (!require("devtools")) install.packages("devtools")
+# devtools::install_github("MaximeRivest/scimeetr")
+
+library(tidyverse) # programming
+library(scimeetr) # bibiometric analysis and determination of sub-communities
+
+dd <- "./data/raw_WoS_20201105/as_txt/"
+scimeetr_list <- import_wos_files(dd)
+```
+
+## scimeetr example - the scimeetr object
+The scimeetr object includes the biblio-data, and some summaries (tags, keywords, top authors)
+Summary can give a little more overview
+```{r echo=TRUE}
+names(scimeetr_list$com1)
+scimeetr_list
+```
+
+---
+
+Summary can give a little more overview
+```{r echo=TRUE}
+summary(scimeetr_list)
+```
+
+## scimeetr example - define sub-communities
+Here coupling bibliography, keywords (recommends also including title, and journal information = 'bickecticjoc')
+This can be done heirarchically/iteratively (`scimap(scisub, coupling_by = 'bickec')`)
+Default is community_algorithm = 'louvain', min_com_size = 30
+```{r echo=TRUE}
+scisub <- scimap(scimeetr_list, coupling_by = 'bickec')
+plot(summary(scisub, com_size = 30))
+
+```
+
+---
+
+```{r echo=TRUE}
+summary(scisub)
+```
+
+## scimeetr example - reading lists {.smaller}
+We can also characterise a corpus by extracting the top ranked papers (a 'reading list'). Several sets of options are available:
+
+- core_papers: rank by most cited 
+- core_yr: most cited per year (from yrs -3 to -10)
+- core_residual: rank by largest divergence from expected (based on fitted trend by age)
+
+- by_expert_LC: returns m papers by k highest ranked (local harmonised H-index) authors
+- by_expert_TC: returns m papers by k highest ranked (total harmonised H-index) authors
+- group_of_experts_TC: returns m papers by k highest ranked (local harmonised H-index) author groups
+- group_of_experts_LC: returns m papers by k highest ranked (total harmonised H-index) author groups
+
+- cite_most_others: ranked by citations (review and well researched)
+- betweeness: interdisciplinary
+- closeness: large and wide list of citations
+- connectness: tend to have cited what most other studies cited.
+
+
+---
+
+```{r echo=TRUE}
+# !! most cited cited references, not most cited articles 
+dive_to(scisub, aim_at = "com1_1") %>% scilist(reading_list = "core_residual") 
+
+dive_to(scisub, aim_at = "com1_1") %>% scilist(reading_list = "cite_most_others")
+```
+
+## scimeetr example - futher funcitons
+See the github repository for [scimeetr](https://github.com/MaximeRivest/scimeetr) of [this talk](https://github.com/lizlaw/LitDeepDiving) for more scimeetr functionality examples, customized functions and cautions
 
 ## bibliometrix
 
@@ -377,6 +469,8 @@ Automated search tools apply algorithms to make at least part of the process tra
 - attention to :
    - stopwords, stemming, N-grams
    - quality data in
-   - 
 
+Algorithms: for generating 'topics' and clustering them (e.g. [this link uses both](https://doi.org/10.2196/jmir.6045) )
 
+![](https://media.giphy.com/media/VcizxCUIgaKpa/giphy.gif)
+![](https://media.giphy.com/media/atcqQ5PuX41J6/giphy.gif)
