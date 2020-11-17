@@ -1,6 +1,6 @@
 ---
 title: "Semi-automated rapid evidence mapping"
-subtitle: "Slides & scripts: https://github.com/lizlaw/LitDeepDiving"
+subtitle: "Slides & scripts:<br>https://github.com/lizlaw/LitDeepDiving"
 author: "Liz Law, Matt Grainger"
 date: "11/9/2020"
 output: 
@@ -15,25 +15,29 @@ knitr::opts_chunk$set(echo = FALSE, cache=TRUE)
 
 ## Patience please :)
 Liz is learning how to do these slides with R-markdown in a safe and friendly environment.
-Sorry for the lack of pretty details etc.
-
-![](https://media.giphy.com/media/UxREcFThpSEqk/giphy.gif)
+Sorry for the lack of pretty details etc.  
+  
+```{r fig.align="center", out.width = "90%"}
+knitr::include_graphics("https://media.giphy.com/media/UxREcFThpSEqk/giphy.gif")
+```
 
 ## Motivating problem(s) 
+
 - Complex search terms (AND, OR, NEAR…TOPICS, TITLES, TYPES… SOURCES, YEARS…)
 - Unknown search terms (familiar with only part of the literature)
 - Getting too much literature (and lots of junk)
 - Getting not enough literature (missing many key papers)
 
-
 --- 
 
-![](https://media.giphy.com/media/7E8lI6TkLrvvAcPXso/giphy.gif)
-
-Particularly issues with broad/complex/interdisciplinary issues (like everything conservation) this can be quickly overwhelming...
+Particularly issues with broad/complex/interdisciplinary issues (like everything conservation) this can be quickly overwhelming...  
+  
+```{r fig.align="center", out.width = "90%"}
+knitr::include_graphics("https://media.giphy.com/media/7E8lI6TkLrvvAcPXso/giphy.gif")
+```
 
 ## Example of the problem
-Aim: summarise evidence for impacts of managed bees on native bees
+**AIM: summarise evidence for impacts of managed bees on native bees**
 
 Broad, complex, interdisciplinary topic: 
 
@@ -63,23 +67,26 @@ Broad, complex, interdisciplinary topic:
 : Searched Web of Science on 11/16/2020
 
 ## Two solutions (not mutually exclusive) {.columns-2}
-Improve/narrow search terms further  
-```{r, out.width=300}
+
+```{r, out.width="80%"}
    knitr::include_graphics('png/OneEyeDeer.png')
 ```
+  
+Improve/narrow search terms further  
 
-<p class="forceBreak"></p>
+<br>
 
-Characterise the literature first, then select groups to include  
-```{r, out.width=300}
+```{r, out.width="80%"}
    knitr::include_graphics('png/NoEyeDeer.png')
 ```
+  
+Characterise the literature first, then select groups to include
 
 ## Improving/narrowing search terms: {.smaller}
 
 More specificity 
 
-- include NEAR, NOT, SAME
+- include NEAR/x, NOT, SAME
 - restrict research areas / journals
 - see e.g.: 
     - [WoS Advanced search](https://images.webofknowledge.com/WOKRS535R100/help/WOS/hp_advanced_search.html)
@@ -90,17 +97,19 @@ Arbitrary cut-offs
 - years, language, document types
 - select top-n by times cited, relevance (Title, Abstract, Keywords, Keywords Plus)
 
+<span style="color:red; font-weight: bold">
 Emerging approaches
 
-- semi-automated extraction of search terms
-- word groups (N-grams, or word co-occurences in ordered sets)
+- <span style="color:red">semi-automated extraction of search terms
+- <span style="color:red">word groups (N-grams, or word co-occurences in ordered sets)
+</span>
 
 ## General advice for searching
 
 MATT to add 
 
+(thought it might be useful to mention e.f. what Keywordsplus is):
 [KeyWords Plus](https://support.clarivate.com/ScientificandAcademicResearch/s/article/KeyWords-Plus-generation-creation-and-changes?language=en_US): important words extracted from the _title of references cited_ (WoS only). Included in TOPIC search (along with title and author-supplied keywords). 
-
 
 ## Improving search terms: litsearchr  {.columns-2}
 ```{r, out.width=450}
@@ -114,108 +123,9 @@ MATT to add
 
 ## litsearchr example 1.1: Load example literature
 
-Using the Red-cockaded woodpecker example in {package::litsearchr}
-
-- We use a "scoping search" to get some literature and deduplicate (n = 156)
+Based on 16 articles suggested by our co-authors (import, and resolve duplicates)
 
 ```{r litsearchr example, echo=FALSE, message=FALSE, warning=FALSE}
-
-library(litsearchr)
-library(synthesisr)
-library(tidyverse)
-
-file_names <- c(
-  system.file("extdata", "scopus.ris", package = "synthesisr"),
-  system.file("extdata", "zoorec.txt", package = "synthesisr"))
-data <- synthesisr::read_refs(file_names)
-
-cleaned_data <- synthesisr::deduplicate(data,
-                                        match_by = "title",
-                                        method = "string_osa",
-                                        rm_punctuation = TRUE,
-                                        to_lower = TRUE)
-```
-
-
-```{r echo=FALSE}
-
-knitr::kable(cleaned_data %>% 
-  select(year, title) %>% 
-  head(3))
-  
-```
-
-## litsearchr example 1.2: Find co-occuring keywords
-
-- Then using the "rake" algorithm we find co-occurring keywords from the abstracts
-
-```{r}
-rake_keywords <- litsearchr::extract_terms(cleaned_data$abstract,
-                                           method = "fakerake",
-                                           min_freq = 5,
-                                           stopwords ="English")
-
-knitr::kable(sample_n(as_tibble(rake_keywords)
-         , 5))
-
-```
-
-```{r echo=FALSE}
-naive_dfm <- litsearchr::create_dfm(
-  elements = cleaned_data$abstract,
-  features = rake_keywords)
-naive_graph <- litsearchr::create_network(
-  search_dfm = as.matrix(naive_dfm),
-  min_studies = 1,
-  min_occ = 1)
-spline_cutoff <- litsearchr::find_cutoff(naive_graph,
-                                         method = "cumulative",
-                                         percent = 0.3,
-                                         knot_num = 3)
-reduced_graph <- litsearchr::reduce_graph(naive_graph,
-                                          cutoff_strength = spline_cutoff)
-search_terms <- litsearchr::get_keywords(reduced_graph)
-#Finally, we can group terms together and write a Boolean search:
- search_groups <- split(search_terms,
-                       factor(
-                         2 - as.numeric(grepl("forest|log", search_terms)),
-                         levels = seq_len(2),
-                         labels = c("forest", "not forest")))
-woodpecker_search <- litsearchr::write_search(search_groups,
-                                              languages = "English",
-                                              stemming = TRUE,
-                                              closure = "left",
-                                              exactphrase = TRUE,
-                                              writesearch = FALSE,
-                                              verbose = TRUE)
-```
-
-## litsearchr example 1.3: Reduce keywords
-
-- Then we can reduce these keywords down to a smaller set
-
-```{r keyword graph}
-
-plot(reduced_graph)
-```
-
-## litsearchr example 1.4: Output search string
-
-- Then we can output a search string. 
-
-Search terms are outputted automatically: `r paste0(woodpecker_search) `
-
-WoS search: TOPIC: (("burn* forest* "  OR "salvag* logging")  AND ("back* woodpeck* "  OR "picoid* arcticus*"))
-= 52 articles (input in 156)
-
-## litsearchr example 2.1: Bee literature, suggested papers
-
-Using our Bee literature
-
-- our team suggested 16 papers that would be suitable
-- Same process as before (except min_freq = 2)
-
-```{r litsearchr example 2, echo=FALSE, message=FALSE, warning=FALSE}
 
 library(litsearchr)
 library(synthesisr)
@@ -229,28 +139,84 @@ cleaned_data <- synthesisr::deduplicate(data,
                                         method = "string_osa",
                                         rm_punctuation = TRUE,
                                         to_lower = TRUE)
+```
 
-rake_keywords <- litsearchr::extract_terms(cleaned_data$abstract,
+Table: Titles in the sample database (n=`r nrow(cleaned_data)`)
+```{r echo=TRUE}
+
+knitr::kable(cleaned_data %>% 
+  select(year, title) %>% 
+  head(5))
+  
+```
+
+## litsearchr example 1.2: Find co-occuring keywords
+
+We can extract and clean tagged keywords (author or database supplied)
+
+```{r echo=TRUE}
+tag_keywords <- litsearchr::extract_terms(keywords = paste(cleaned_data$keywords, cleaned_data$keywords),
+                                           method = "tagged",
+                                           min_freq = 2,
+                                           stopwords ="English")
+```
+
+Or, using the Rapid Automatic Keyword Extraction ("rake") algorithm we find co-occurring keywords (n-grams) from the titles and abstracts  
+
+```{r echo=TRUE}
+rake_keywords <- litsearchr::extract_terms(text = paste(cleaned_data$title, cleaned_data$abstract),
                                            method = "fakerake",
                                            min_freq = 2,
                                            stopwords ="English")
+```
 
+```{r}
+# for presentation of some raked words
+rake_keywords %>% 
+  str_remove_all('english') %>% 
+  str_trim() %>% 
+  str_squish()
+```
+
+## litsearchr example 1.3: Reduce keywords
+Then we can create a co-occurence network to reduce the keywords to a smaller set  
+(for code, see the slide github repository linked on the title page)
+```{r echo=FALSE}
 naive_dfm <- litsearchr::create_dfm(
-  elements = cleaned_data$abstract,
-  features = rake_keywords)
+  elements = paste(cleaned_data$title, cleaned_data$abstract, cleaned_data$keywords),
+  features = c(tag_keywords, rake_keywords))
+
 naive_graph <- litsearchr::create_network(
   search_dfm = as.matrix(naive_dfm),
   min_studies = 1,
   min_occ = 1)
+
 spline_cutoff <- litsearchr::find_cutoff(naive_graph,
                                          method = "cumulative",
-                                         percent = 0.3,
-                                         knot_num = 3)
+                                         percent = 0.5)             ## reduce percent to reduce number of words
+
 reduced_graph <- litsearchr::reduce_graph(naive_graph,
                                           cutoff_strength = spline_cutoff)
+
 search_terms <- litsearchr::get_keywords(reduced_graph)
-#Finally, we can group terms together and write a Boolean search:
-bee_search <- litsearchr::write_search(search_terms,
+```
+
+```{r keyword graph}
+plot(reduced_graph)
+```
+
+## litsearchr example 1.4: Group and write boolean string
+
+Finally, we can group terms together and write a Boolean search:
+
+```{r group and output, include = FALSE}
+search_groups <- split(search_terms,
+                       factor(
+                         2 - as.numeric(grepl("rates|impact|competition|interactions|resources", search_terms)),
+                         levels = seq_len(2),
+                         labels = c("interactions", "other")))
+ 
+bee_search <- litsearchr::write_search(search_groups,
                                               languages = "English",
                                               stemming = TRUE,
                                               closure = "left",
@@ -259,34 +225,48 @@ bee_search <- litsearchr::write_search(search_terms,
                                               verbose = TRUE)
 ```
 
-Search terms: `r paste0(bee_search) `
+```{r bee boolean}
+cat(bee_search)
+```
+  
+WoS Search of this in TOPIC = 13,155
+Removing ("climat* chang* " OR "ecosystem* servic* " OR "function* trait*") = 1,095
 
-TOPIC: (("climat* chang* ")  AND ("ecosystem* servic* ")  AND ("pollin* popul* ")  AND ("pollin* servic*"))  
-= 6 results, all relevant, but possibly a little restrictive!
-
-## summary on litsearcher
-
+## summary on semi-automated search term extraction (e.g. litsearcher)
 Benefits: 
 
-- really great for narrowing down useful co-occurence terms
+- identifying useful co-occurence terms 
+- identifying common tagged keywords
 
 Caveats:
 
-- needs good sample literature
+- needs good sample literature to develop matrix
+- can output 'common' words that should not be included 
+- restrictive options can result in fewer papers than input
 
+<span style="color:red; font-weight: bold">
+Summary: Useful as a component of developing a search, when you already have a reasonable sample database, but needs human oversight.
+</span>
 
-## Approach #2: Grouping the literature, then narrow down
+## Approach #2: Grouping the literature, then narrow down {.columns-2}
 
-Concept is to utilize the citation records to group the literature
+- Concept is to utilize (full) citation records to cluster the literature
+- 'Clustering' can utilize data from keywords, cited references, journals, and/or terms extracted from titles and abstracts, ...
+- Characterise the clusters by keywords, "topic models"
+- Develop "reading lists" 
+- R options include: scimeetr, revtools, bibliometrix
 
-'Clustering' can utilize data from keywords, cited references, journals, and/or terms extracted from titles and abstracts
+<br>
 
-Characterise the clusters by keywords, "topic models", "reading lists"
+```{r, out.width="70%", fig.align='center'}
+   knitr::include_graphics('https://www.maximerivest.com/img/all_com.jpg')
+```
+```{r, out.width="30%"}
+   knitr::include_graphics('https://revtools.net/assets/img/revtools_hex.png')
+   knitr::include_graphics('https://www.bibliometrix.org/assets/images/logo-bibliometrix-piccolissimo-trasparente-110x128.png')
+```
 
-Options in Scimeetr, revtools, bibliometrix
-
-
-## scimeetr {.smaller .columns-2}
+## scimeetr {.columns-2}
 
 Designed to "help explore the literature" by
 
@@ -299,17 +279,8 @@ Clustering based on
 - `igraph::cluster_louvain()` or `igraph::cluster_fast_greedy()` (self-stopping)
 - using cited references, keywords, title, abstract (some cleaning using `tm`)
 
-Caveats: 
-
-- only on github, 'beta' version, ? on further development
-- may need some further 'cleaning' and customising
-- for example:
-     - Year is missing for many interesting early access
-     - may need 'stemming' of keywords, for some purposes
-     - may need to identify 'synonyms' and possibly compount terms in data cleaning.
-
 ## scimeetr example - load data
-Load as tab delimited files
+Load as tab delimited files - note text cleaning is done automatically with no options documented, but code available to examine/modify
 ```{r echo=TRUE, warnings=FALSE, message=FALSE}
 
 # install.packages
@@ -323,7 +294,7 @@ dd <- "./data/raw_WoS_20201105/as_txt/"
 scimeetr_list <- import_wos_files(dd)
 ```
 
-## scimeetr example - the scimeetr object
+## scimeetr example - the scimeetr object {.smaller}
 The scimeetr object includes the biblio-data, and some summaries (tags, keywords, top authors)
 Summary can give a little more overview
 ```{r echo=TRUE}
@@ -331,8 +302,7 @@ names(scimeetr_list$com1)
 scimeetr_list
 ```
 
----
-
+## {.smaller}
 Summary can give a little more overview
 ```{r echo=TRUE}
 summary(scimeetr_list)
@@ -345,11 +315,9 @@ Default is community_algorithm = 'louvain', min_com_size = 30
 ```{r echo=TRUE}
 scisub <- scimap(scimeetr_list, coupling_by = 'bickec')
 plot(summary(scisub, com_size = 30))
-
 ```
 
----
-
+## {.smaller}
 ```{r echo=TRUE}
 summary(scisub)
 ```
@@ -357,22 +325,19 @@ summary(scisub)
 ## scimeetr example - reading lists {.smaller}
 We can also characterise a corpus by extracting the top ranked papers (a 'reading list'). Several sets of options are available:
 
-- core_papers: rank by most cited 
-- core_yr: most cited per year (from yrs -3 to -10)
-- core_residual: rank by largest divergence from expected (based on fitted trend by age)
+- **core_papers:** rank by most cited 
+- **core_yr:** most cited per year (from yrs -3 to -10)
+- **core_residual:** rank by largest divergence from expected (based on fitted trend by age)
+- **by_expert_LC:** returns m papers by k highest ranked (local harmonised H-index) authors
+- **by_expert_TC:** returns m papers by k highest ranked (total harmonised H-index) authors
+- **group_of_experts_TC:** returns m papers by k highest ranked (local harmonised H-index) author groups
+- **group_of_experts_LC:** returns m papers by k highest ranked (total harmonised H-index) author groups
+- **cite_most_others:** ranked by citations (review and well researched)
+- **betweeness:** interdisciplinary
+- **closeness:** large and wide list of citations
+- **connectness:** tend to have cited what most other studies cited.
 
-- by_expert_LC: returns m papers by k highest ranked (local harmonised H-index) authors
-- by_expert_TC: returns m papers by k highest ranked (total harmonised H-index) authors
-- group_of_experts_TC: returns m papers by k highest ranked (local harmonised H-index) author groups
-- group_of_experts_LC: returns m papers by k highest ranked (total harmonised H-index) author groups
-
-- cite_most_others: ranked by citations (review and well researched)
-- betweeness: interdisciplinary
-- closeness: large and wide list of citations
-- connectness: tend to have cited what most other studies cited.
-
-
----
+## {.smaller}
 
 ```{r echo=TRUE}
 # !! most cited cited references, not most cited articles 
@@ -381,21 +346,46 @@ dive_to(scisub, aim_at = "com1_1") %>% scilist(reading_list = "core_residual")
 dive_to(scisub, aim_at = "com1_1") %>% scilist(reading_list = "cite_most_others")
 ```
 
-## scimeetr example - futher funcitons
+## scimeetr example - futher functions
 See the github repository for [scimeetr](https://github.com/MaximeRivest/scimeetr) of [this talk](https://github.com/lizlaw/LitDeepDiving) for more scimeetr functionality examples, customized functions and cautions
 
-## bibliometrix
+## revtools {.columns-2}
+```{r, out.width="100%}
+   knitr::include_graphics('https://revtools.net/assets/img/revtools_hex.png')
+```
 
-Similarly to scimeetr
+- support researchers working on evidence synthesis projects
+- visualise patterns in bibliographic data
+- interactively select or exclude individual articles or words
+
+## revtools example - load data
+Liz to add
+
+## revtools example - deduplicate
+Liz to add
+
+## revtools example - screen titles
+Liz to add
+
+## revtools example - screen abstracts
+Liz to add
+
+## revtools example - topic models
+Liz to add
+
+## bibliometrix {.smaller}
+
+Similarly to scimeetr/revtools
 
 - provides an easy way to characterise the data
 - e.g. plots by year
 
-Differently to scimeetr
+Differently to scimeetr/revtools
 
 - More network plot options (plot co-author, country networks)
 - Fewer integrated grouping options
 - R-cran, more stable (?)
+- annoying change of column labels from wos import
 
 Clustering based on:
 
@@ -403,34 +393,22 @@ Clustering based on:
 - Multiple Correspondence Analysis (default), or CA, MDS
 - then k-means clustering on this (k = "auto" or user-supplied)
 
-Caveats
+## Summary on grouping literature (litsearchr, scimeetr, bibliometrix)
 
-- similarly to scimeetr, data may need pre-cleaning
-- annoying change of column labels from wos import
+Benefits:
 
-## bibliometrix example
+- Groups that can be used to:
+    - explore large searches
+    - alternative method to narrow down searches
 
-MATT to Add??
+Caveats: 
 
-## summary on litsearchr, scimeetr, bibliometrix
+- emerging methods may need further development, e.g. further 'cleaning' and customising:
+     - Year is missing for many interesting early access articles
+     - may need 'stemming' of keywords (e.g. in scimeetr)
+     - may need to include'synonyms' and n-grams (e.g. in scimeetr)
 
-- litsearchr useful, but should be part of a process including
-- scimeetr (Liz' preference) or bibliometrix
-
-BUT
-
-- best practice would be iterative, documented (eg. in R)
-- AND involve further cleaning, processing of data & terms
-
-## Going further
-
-Facilitated title and abstract screening using revtools
-
-- allocates randomly to participants
-- title, blinded to other details (authors etc)
-- in/out/unsure
-
-And/or...
+Summary: Useful to get an overview, particularly when you are just starting out, or topic is multi-faceted, but needs attention to detail.
 
 ## Diving deeper
 
@@ -455,22 +433,28 @@ caveats(?)
   - but this useful for standardisation of the literature
   - we can potentially automate creation of these lists via text mining
 
-## summary
-Literature searches are extremely subjective
+## Summary {.smaller}
+Literature searches are extremely subjective - there is no way about this.
 
  - what words/terms to include
  - how to combine
  - which fields to search
  - how to narrow down to a manageable set
  
-Automated search tools apply algorithms to make at least part of the process transparent and repeatable.
+Semi-automated methods apply algorithms to make at least part of the process transparent and repeatable... BUT needs human oversight, particularly for broad, complex, interdisciplinary topics.
 
-- despite requiring many more subjective decisions
-- attention to :
+- allows screening of more than just title/abstract/keywords
+- still requires (many more) subjective decisions
+- attention to:
+   - quality data in ~ reasonable data out
    - stopwords, stemming, N-grams
-   - quality data in
+   - algorithms for generating 'topics' and clustering them (e.g. [this link uses both](https://doi.org/10.2196/jmir.6045) )
 
-Algorithms: for generating 'topics' and clustering them (e.g. [this link uses both](https://doi.org/10.2196/jmir.6045) )
+However, methods constantly improving, and we can improve the data going in through standardisation, term lists, etc...
 
+---
+
+It is so easy to automatically collate a large database of potential papers
 ![](https://media.giphy.com/media/VcizxCUIgaKpa/giphy.gif)
+But we need to be pretty clever about then excluding those that are less relevant
 ![](https://media.giphy.com/media/atcqQ5PuX41J6/giphy.gif)
