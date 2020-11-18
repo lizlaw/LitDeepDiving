@@ -322,9 +322,10 @@ summary(scimeetr_list)
 ```
 
 ## scimeetr example - define sub-communities
-Here coupling bibliography, keywords (recommends also including title, and journal information = 'bickecticjoc')
-This can be done heirarchically/iteratively (`scimap(scisub, coupling_by = 'bickec')`)
-Default is community_algorithm = 'louvain', min_com_size = 30
+- Here coupling bibliography, keywords (recommends also including title, and journal information = 'bickecticjoc')(I think these can be weighted)
+- This can be done heirarchically/iteratively (`scimap(scisub, coupling_by = 'bickec')`)  
+- Default is community_algorithm = 'louvain', min_com_size = 30  
+
 ```{r echo=TRUE}
 scisub <- scimap(scimeetr_list, coupling_by = 'bickec')
 plot(summary(scisub, com_size = 30))
@@ -374,22 +375,81 @@ See the github repository for [scimeetr](https://github.com/MaximeRivest/scimeet
     - abstracts
     - topic models
 - topic models
-    - data: 
+    - data: user selected columns, concatenated into a single string & cleaned
+    - algorithm:  Latent Dirichlet Allocation, LDA (or Correlated Topic Models, CTM)(needs input #of topics)
 
 ## revtools example - load data
-Liz to add
+
+```{r echo=TRUE}
+library(revtools)
+library(tidyverse)
+
+file_names <- list.files("./data/raw_WoS_20201105/as_bib/", full = TRUE)
+data <- revtools::read_bibliography(file_names)
+
+```
 
 ## revtools example - deduplicate
-Liz to add
+`find_duplicates` searches for 
+    - doi (exact match)
+    - title (fuzzy matching using the ‘stringdist’ package)
+Recommended to use `screen_duplicates` (to have user oversight, esp with fuzzymatching)
 
-## revtools example - screen titles
-Liz to add
+```{r echo = TRUE}
+data_unique <- screen_duplicates(data)
+```
 
-## revtools example - screen abstracts
-Liz to add
+## revtools example - screen titles/abstracts
+Similarly, revtools facilitates manual screening of titles and abstracts (sampling here just to demo)
+```{r echo = TRUE}
+data_ti_screened <- screen_titles(data_unique %>% sample_n(10))
+```
+
+```{r echo = TRUE}
+data_ab_screened <- screen_abstracts(data_ti_screened %>% sample_n(5))
+```
 
 ## revtools example - topic models
-Liz to add
+- Revtools uses topic models to help with screening.
+- Here we will do this with a random 100 samples from our original data.
+- User chooses the columns.
+- These are then:
+    - collapsed to a single string
+    - cleaned for punctuation, numbers, stopwords
+    - fed into a (LDA) topic model
+- Data points can be selected or excluded individually, or by topic.
+
+```{r echo = TRUE}
+data_topic_screened <- screen_topics(data_unique %>% sample_n(100))
+```
+
+## revtools example - extracting the topic models {.smaller .columns-2}
+What if we are interested in using the topic models for other purposes??
+
+Revtools `screen_topics` uses:
+
+- `make_dtm()` extracts & cleans data, runs `tm::DocumentTermMatrix()` 
+- `run_topic_model()` wrapper for `topicmodels::LDA` or `topicmodels::CTM`
+- `topicmodels::topics()` pulls out allocated topics perID
+  
+See vignettes for `topicmodels` and `tm` for more details
+Or [Tidy Text Mining](https://www.tidytextmining.com/index.html) 
+
+```{r}
+
+dfc <- data_unique %>% 
+  sample_n(100) %>% 
+  select(title, abstract, keywords)
+
+dtm <- make_dtm(dfc)
+tmm <- run_topic_model(dtm)
+
+topic_allocated <- topicmodels::topics(tmm)
+```
+
+```{r, out.width="100%}
+knitr::include_graphics("https://www.tidytextmining.com/images/cover.png")
+```
 
 ## bibliometrix {.smaller}
 
@@ -400,56 +460,72 @@ Similarly to scimeetr/revtools
 
 Differently to scimeetr/revtools
 
-- More network plot options (plot co-author, country networks)
+- More network plot options (plot co-author, country networks) if that's your jazz
 - Fewer integrated grouping options
 - R-cran, more stable (?)
-- annoying change of column labels from wos import
+- Annoying change of column labels from wos import
 
 Clustering based on:
 
-- keywords, title, OR abstract (optional 'stemming')
+- keywords, title, OR abstract (with optional 'stemming')
 - Multiple Correspondence Analysis (default), or CA, MDS
 - then k-means clustering on this (k = "auto" or user-supplied)
 
-## Summary on grouping literature (litsearchr, scimeetr, bibliometrix)
+## Summary on grouping literature (scimeetr, revtools, bibliometrix)
 
 Benefits:
 
 - Groups that can be used to:
-    - explore large searches
+    - explore large datasets
     - alternative method to narrow down searches
 
 Caveats: 
 
-- emerging methods may need further development, e.g. further 'cleaning' and customising:
-     - Year is missing for many interesting early access articles
-     - may need 'stemming' of keywords (e.g. in scimeetr)
-     - may need to include'synonyms' and n-grams (e.g. in scimeetr)
+- emerging methods may need further development
+     -  e.g. further 'cleaning' and customising:
+         - Year is missing for many interesting early access articles
+         - 'stemming' of keywords (e.g. missing in scimeetr)
+         - consider 'synonyms' and n-grams (e.g. missing in scimeetr)
+     - data and algorithms may need 'tuning' for purpose
 
+<span style="color:red; font-weight: bold">
 Summary: Useful to get an overview, particularly when you are just starting out, or topic is multi-faceted, but needs attention to detail.
+</span>
 
-## Diving deeper
+## Diving deeper {.smaller.columns-2}
+
+```{r out.width="100%"}
+knitr::include_graphics("https://github.com/elizagrames/doi2txt/raw/main/man/figures/logo.png")
+```
 
 doi2text
 
-- automates finding of full text 
-- identifies sections
+- automates finding of full text from doi
+- identifies and extracts sections (e.g. intro, methods, ...)
 
-text mining of (primary) literature 
+Allows text mining of (primary) literature for use 
 
-e.g.
+- in literature searches
+- systematic mapping, e.g. studies with particular methods
 
-- searching for specific terms within the methods/results text 
+e.g. search methods/results for particular
   - species / species types 
   - landscapes / locations
   - sampling methods (pan, malaise, netting, etc)
-- searching for data in figures and tables through legends
   
-caveats(?) 
+## Diving deeper - challenges & future directions
+
+Caveats/further developments
 
   - needs to be fed in 'lists' 
   - but this useful for standardisation of the literature
-  - we can potentially automate creation of these lists via text mining
+  - we can potentially automate creation of these lists via text mining  
+    
+  - Non-standard formats (titles, breaks need to be identified)
+  - (Possibly) searching for data in figures and tables through their legends
+  
+## Diving deeper - example
+
 
 ## Summary {.smaller}
 Literature searches are extremely subjective - there is no way about this.
