@@ -585,7 +585,7 @@ sci112
 
 ## {}
 screen for language type and document type, has doi, extract the doi, and take first 10 as an example
-```{r doi2txt example3, echo=TRUE}
+```{r doi2txt example3, echo=TRUE, message=FALSE, warning=FALSE}
 doidf <- sci112[[1]]$dfsci %>% 
   select(DI) %>% 
   filter(DI != "") %>% 
