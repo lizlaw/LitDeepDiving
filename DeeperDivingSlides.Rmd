@@ -47,6 +47,9 @@ Broad, complex, interdisciplinary topic:
 - many direct (nesting, foraging) and indirect (plant, pests, pesticides) interactions
 - overlap of literatures: entomology, plant ecology, ecosystem services,...
 
+Further scripts available in the [slide github folder](https://github.com/lizlaw/LitDeepDiving)
+Data (bib and txt bibliographies from WoS) in [OSF folder](https://doi.org/10.17605/OSF.IO/3SDWC)
+
 ## Example of the problem - search terms
 | Category| Term list |
 |:--------|:----------|
