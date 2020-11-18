@@ -6,4 +6,10 @@ slides > slide.title-slide {
 
 slides > slide.title-slide hgroup {
   width: 80%;
+
+}
+
+slides > slide {
+  overflow-x: auto !important;
+  overflow-y: auto !important;
 }

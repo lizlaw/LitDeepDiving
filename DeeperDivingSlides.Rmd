@@ -9,6 +9,8 @@ output:
         css: styles.css
 ---
 
+
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, cache=TRUE)
 ```
@@ -107,12 +109,36 @@ Emerging approaches
 - <span style="color:red">word groups (N-grams, or word co-occurences in ordered sets)
 </span>
 
-## General advice for searching
+## General advice for searching #1
 
-MATT to add 
+- New paper by Gusenbauer & Haddaway (DOI: 10.1002/jrsm.1457) which outlines general advice for searching
+- "Google Scholar...shows us beautifully how a
+system can be perfectly suited for one type of search, while
+failing miserably for another."
+- "targeted searches" = good 
+- "systematic searches" = rubbish!
 
-(thought it might be useful to mention e.f. what Keywordsplus is):
-[KeyWords Plus](https://support.clarivate.com/ScientificandAcademicResearch/s/article/KeyWords-Plus-generation-creation-and-changes?language=en_US): important words extracted from the _title of references cited_ (WoS only). Included in TOPIC search (along with title and author-supplied keywords). 
+
+```{r, out.width = "500px", out.height= "700px", echo=FALSE}
+
+knitr::include_graphics("png/table1.png")
+
+```
+
+
+
+
+## General advice for searching #2
+
+- Write a protocol to avoid mission-creep
+- Use multiple databases (include Google Scholar, WoS, dogpile, pubmed, etc.)
+- Use topic searches in WoS  
+- [KeyWords Plus](https://support.clarivate.com/ScientificandAcademicResearch/s/article/KeyWords-Plus-generation-creation-and-changes?language=en_US): important words extracted from the _title of references cited_ (WoS only). Included in TOPIC search (along with title and author-supplied keywords). 
+
+- But be aware of biases at all times (Bas et al. 2020 Journal of Clinical Epidemiology,121,
+https://doi.org/10.1016/j.jclinepi.2020.01.009.)
+  *"Literature searches based on title, abstract, and keywords alone may not be sufficiently sensitive for studies of epidemiological research practice."*
+
 
 ## Improving search terms: litsearchr  {.columns-2}
 ```{r, out.width=450}
@@ -145,7 +171,7 @@ cleaned_data <- synthesisr::deduplicate(data,
 ```
 
 Table: Titles in the sample database (n=`r nrow(cleaned_data)`)
-```{r echo=TRUE}
+```{r echo=FALSE}
 
 knitr::kable(cleaned_data %>% 
   select(year, title) %>% 
@@ -161,9 +187,13 @@ We can extract and clean tagged keywords (author or database supplied)
 tag_keywords <- litsearchr::extract_terms(keywords = paste(cleaned_data$keywords, cleaned_data$keywords),
                                            method = "tagged",
                                            min_freq = 2,
-                                           stopwords ="English")
+                                       stopwords ="English")
 ```
-(Sample):
+
+```{r, echo=FALSE}
+tag_keywords[1:10]
+```
+
 ```{r}
 # for presentation of some tagged words
 tag_keywords %>% 
@@ -180,20 +210,23 @@ rake_keywords <- litsearchr::extract_terms(text = paste(cleaned_data$title, clea
                                            method = "fakerake",
                                            min_freq = 2,
                                            stopwords ="English")
+
 ```
-(Sample):
-```{r}
+
+
+```{r,echo=FALSE, attr.output='style="max-height: 100px;"'}
 # for presentation of some raked words
-rake_keywords %>% 
-  sample(12) %>% 
+rake_keywords[1:10] %>% 
   str_remove_all('english') %>% 
   str_trim() %>% 
   str_squish()
 ```
 
+
 ## litsearchr example 1.3: Reduce keywords
 Then we can create a co-occurence network to reduce the keywords to a smaller set  
 (for code, see the slide github repository linked on the title page)
+
 ```{r echo=FALSE}
 naive_dfm <- litsearchr::create_dfm(
   elements = paste(cleaned_data$title, cleaned_data$abstract, cleaned_data$keywords),
@@ -274,6 +307,7 @@ Summary: Useful as a component of developing a search, when you already have a r
 ```{r, out.width="70%", fig.align='center'}
    knitr::include_graphics('https://www.maximerivest.com/img/all_com.jpg')
 ```
+
 ```{r, out.width="30%"}
    knitr::include_graphics('https://revtools.net/assets/img/revtools_hex.png')
    knitr::include_graphics('https://www.bibliometrix.org/assets/images/logo-bibliometrix-piccolissimo-trasparente-110x128.png')
@@ -293,8 +327,9 @@ Clustering based on
 - algorithm: `igraph::cluster_louvain()` or `igraph::cluster_fast_greedy()` (self-stopping)
 
 ## scimeetr example - load data
-Load as tab delimited files - note text cleaning is done automatically with no options documented (code easy to examine/modify)
-```{r echo=TRUE, warnings=FALSE, message=FALSE}
+
+Load as tab delimited files - note text cleaning is done automatically with no options documented, but code available to examine/modify
+```{r echo=TRUE, warning=FALSE, message=FALSE}
 
 # install.packages
 # if (!require("devtools")) install.packages("devtools")
@@ -309,30 +344,31 @@ scimeetr_list <- import_wos_files(dd)
 
 ## scimeetr example - the scimeetr object {.smaller}
 The scimeetr object includes the biblio-data, and some summaries (tags, keywords, top authors)
-Summary can give a little more overview
-```{r echo=TRUE}
+
+```{r echo=TRUE, attr.output='style="max-height: 100px;"'}
 names(scimeetr_list$com1)
 scimeetr_list
 ```
 
 ## {.smaller}
 Summary can give a little more overview
-```{r echo=TRUE}
+```{r echo=TRUE, attr.output='style="max-height: 100px;"'}
 summary(scimeetr_list)
 ```
 
 ## scimeetr example - define sub-communities
+
 - Here coupling bibliography, keywords (recommends also including title, and journal information = 'bickecticjoc')(I think these can be weighted)
 - This can be done heirarchically/iteratively (`scimap(scisub, coupling_by = 'bickec')`)  
 - Default is community_algorithm = 'louvain', min_com_size = 30  
 
-```{r echo=TRUE}
+```{r echo=TRUE, warning=FALSE, message=FALSE}
 scisub <- scimap(scimeetr_list, coupling_by = 'bickec')
 plot(summary(scisub, com_size = 30))
 ```
 
 ## {.smaller}
-```{r echo=TRUE}
+```{r echo=TRUE, attr.output='style="max-height: 100px;"'}
 summary(scisub)
 ```
 
@@ -363,7 +399,7 @@ dive_to(scisub, aim_at = "com1_1") %>% scilist(reading_list = "cite_most_others"
 See the github repository for [scimeetr](https://github.com/MaximeRivest/scimeetr) of [this talk](https://github.com/lizlaw/LitDeepDiving) for more scimeetr functionality examples, customized functions and cautions
 
 ## revtools {.columns-2}
-```{r, out.width="100%}
+```{r, out.width="100%"}
    knitr::include_graphics('https://revtools.net/assets/img/revtools_hex.png')
 ```
 
