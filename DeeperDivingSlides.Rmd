@@ -132,7 +132,7 @@ failing miserably for another."
 
 ```{r, out.width = "100%", echo=FALSE}
 
-knitr::include_graphics("png/table1-1.png")
+knitr::include_graphics("png/table1.png")
 
 ```
 
@@ -286,7 +286,9 @@ cat(str_wrap(bee_search))
 WoS Search of this in TOPIC = 13,155  
 Removing ("climat* chang* " OR "ecosystem* servic* " OR "function* trait*") = 1,095
 
-## summary on semi-automated search term extraction (e.g. litsearcher)
+Example on woodpeckers exactly as in the litsearchr vignette (see R/litsearchrVignette) starts with 156 papers, and finds 103.   
+
+## Summary on semi-automated search term extraction (e.g. litsearcher)
 Benefits: 
 
 - identifying useful co-occurence terms 
