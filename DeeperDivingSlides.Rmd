@@ -1,6 +1,6 @@
 ---
 title: "Semi-automated rapid evidence mapping"
-subtitle: "Slides & scripts:<br>https://github.com/lizlaw/LitDeepDiving"
+subtitle: "Slides & scripts:<br>https://github.com/lizlaw/LitDeepDiving<br>Data: https://doi.org/10.17605/OSF.IO/3SDWC"
 author: "Liz Law, Matt Grainger"
 date: "11/9/2020"
 output: 
@@ -9,21 +9,31 @@ output:
         css: styles.css
 ---
 
-
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, cache=TRUE)
 ```
 
+## What this talk will address
+
+- Motivating problems & our bee example
+- General advice on searching
+- Refining search terms
+    - litsearcher
+- Examining and grouping search results
+    - scimeetr
+    - revtools
+- Future directions
+    - doi2txt
+
 ## Patience please :)
 Liz is learning how to do these slides with R-markdown in a safe and friendly environment.
-Sorry for the lack of pretty details etc.  
+Sorry for the lack of pretty formatting, details etc.  
   
 ```{r fig.align="center", out.width = "90%"}
 knitr::include_graphics("https://media.giphy.com/media/UxREcFThpSEqk/giphy.gif")
 ```
 
-## Motivating problem(s) {.columns-2}
+## Searching the literature: Motivating problem(s) {.columns-2}
 
 - Complex search terms (AND, OR, NEAR…TOPICS, TITLES, TYPES… SOURCES, YEARS…)
 - Unknown search terms (familiar with only part of the literature)
@@ -43,6 +53,7 @@ knitr::include_graphics("https://media.giphy.com/media/7E8lI6TkLrvvAcPXso/giphy.
 ```
 
 ## Example of the problem
+  
 **AIM: summarise evidence for impacts of managed bees on native bees**
 
 Broad, complex, interdisciplinary topic: 
@@ -52,9 +63,6 @@ Broad, complex, interdisciplinary topic:
 - common names ("honeybee", "pollinators", ...) 
 - many direct (nesting, foraging) and indirect (plant, pests, pesticides) interactions
 - overlap of literatures: entomology, plant ecology, ecosystem services,...
-
-Further scripts available in the [slide github folder](https://github.com/lizlaw/LitDeepDiving)
-Data (bib and txt bibliographies from WoS) in [OSF folder](https://doi.org/10.17605/OSF.IO/3SDWC)
 
 ## Example of the problem - search terms
 | Category| Term list |
@@ -119,12 +127,12 @@ Emerging approaches
 - "Google Scholar...shows us beautifully how a
 system can be perfectly suited for one type of search, while
 failing miserably for another."
-- "targeted searches" = good 
-- "systematic searches" = rubbish!
+    - "targeted searches" = good 
+    - "systematic searches" = rubbish!
 
 ```{r, out.width = "100%", echo=FALSE}
 
-knitr::include_graphics("png/table1.png")
+knitr::include_graphics("png/table1-1.png")
 
 ```
 
@@ -395,8 +403,18 @@ dive_to(scisub, aim_at = "com1_1") %>% scilist(reading_list = "core_residual")
 dive_to(scisub, aim_at = "com1_1") %>% scilist(reading_list = "cite_most_others")
 ```
 
-## scimeetr example - futher functions
-See the github repository for [scimeetr](https://github.com/MaximeRivest/scimeetr) or [these slides](https://github.com/lizlaw/LitDeepDiving) for more scimeetr functionality examples, customized functions and cautions
+## scimeetr example - futher functions {.columns-2}
+See the github repository for [scimeetr](https://github.com/MaximeRivest/scimeetr) or [these slides](https://github.com/lizlaw/LitDeepDiving) for more scimeetr functionality examples, customized functions and cautions  
+  
+Data (bib and txt bibliographies from WoS) for these slides in [OSF folder](https://doi.org/10.17605/OSF.IO/3SDWC)  
+
+<br>
+
+```{r out.width="50%"}
+knitr::include_graphics("https://media.giphy.com/media/VcizxCUIgaKpa/giphy.gif")
+
+knitr::include_graphics("https://media.giphy.com/media/atcqQ5PuX41J6/giphy.gif")
+```
 
 ## revtools {.smaller .columns-2}
 Support researchers working on evidence synthesis projects
@@ -437,7 +455,7 @@ data <- revtools::read_bibliography(file_names)
 Recommended to use `screen_duplicates` (to have user oversight, esp with fuzzymatching)
 Similarly, revtools facilitates manual screening of titles and abstracts (sampling here just to demo)
 
-- (done external to this presentation because I can't work out a good way to do it here)
+- (done external to this presentation - R/revtoolsShinyExample.R - because I can't work out a good way to do it here)
 
 ```{r echo = TRUE}
 # data_unique <- screen_duplicates(data)
@@ -501,8 +519,7 @@ Differently to scimeetr/revtools
 
 - More network plot options (plot co-author, country networks) if that's your jazz
 - Fewer integrated grouping options
-- R-cran, more stable (?)
-- Annoying change of column labels from wos import
+- History of the literature plots
 
 Clustering based on:
 
@@ -521,11 +538,12 @@ Benefits:
 Caveats: 
 
 - emerging methods may need further development
-     -  e.g. further 'cleaning' and customising:
+     - data and algorithms may need 'tuning' for purpose
+     - and further 'cleaning' and customising:
          - Year is missing for many interesting early access articles
          - 'stemming' of keywords (e.g. missing in scimeetr)
          - consider 'synonyms' and n-grams (e.g. missing in scimeetr)
-     - data and algorithms may need 'tuning' for purpose
+     
 
 <span style="color:red; font-weight: bold">
 Summary: Useful to get an overview, particularly when you are just starting out, or topic is multi-faceted, but needs attention to detail.
@@ -551,18 +569,6 @@ e.g. search methods/results for particular
   - species / species types 
   - landscapes / locations
   - sampling methods (pan, malaise, netting, etc)
-  
-## Diving deeper - challenges & future directions
-
-Caveats/further developments
-
-  - best if fed in 'lists' of terms to search for
-  - but this useful for standardisation of the literature
-  - we can potentially automate creation of these lists via text mining  
-  - but obviously better with expert oversight
-      
-  - Non-standard formats (titles, breaks need to be identified)
-  - (Possibly) searching for data in figures and tables through their legends
   
 ## doi2txt example - retriving full text sections
 
@@ -643,7 +649,19 @@ results <- doidf[c(3,4,5,6,8,9), ] %>%
 results
 ```
 
+## Diving deeper - challenges & future directions
 
+Probably very useful, but a lot of development to go:
+
+  - best if fed in 'lists' of terms to search for
+  - but this useful for standardisation of the literature
+  - we can potentially automate creation of these lists via text mining  
+  - but obviously better with expert oversight
+  <br>    
+  - Non-standard formats (titles, breaks need to be identified)
+  - (Possibly) searching for data in figures and tables through their legends
+  - doi2pdf2txt ??
+  
 ## Summary {.smaller}
 **Literature searches are extremely subjective - there is no way about this.**
 
@@ -654,20 +672,13 @@ results
  
 **Semi-automated methods apply algorithms to make at least part of the process transparent and repeatable... BUT needs human oversight, particularly for broad, complex, interdisciplinary topics.**
 
-- allows screening of more than just title/abstract/keywords
+- allows use of more than just title/abstract/keywords
 - still requires (many more) subjective decisions
 - attention to:
-   - quality data in ~ reasonable data out
-   - stopwords, stemming, N-grams
+   - quality data in ~ checks of algorithm outputs ~ reasonable data out
+   - stopwords, stemming, N-grams (learn from text mining and topic modelling)
    - algorithms for generating 'topics' and clustering them (e.g. [examples in text mining](https://doi.org/10.2196/jmir.6045) )
 
 **Methods constantly improving, and we can improve the data going in through standardisation, term lists, etc...**
 
-## {.columns-2}
-```{r out.width="90%"}
-knitr::include_graphics("https://media.giphy.com/media/VcizxCUIgaKpa/giphy.gif")
-```
 
-```{r out.width="90%"}
-knitr::include_graphics("https://media.giphy.com/media/atcqQ5PuX41J6/giphy.gif")
-```
